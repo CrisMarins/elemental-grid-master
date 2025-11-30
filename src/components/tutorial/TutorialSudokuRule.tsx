@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import GameGrid from "@/components/game/GameGrid";
@@ -16,6 +16,20 @@ const TutorialSudokuRule = ({ onNext }: TutorialSudokuRuleProps) => {
   ]);
   const [showElementButtons, setShowElementButtons] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [error, setError] = useState(false);
+  const [topLeftNumbers, setTopLeftNumbers] = useState<number[][]>([]);
+  const [bottomRightNumbers, setBottomRightNumbers] = useState<number[][]>([]);
+
+  useEffect(() => {
+    // Load CSV files
+    Promise.all([
+      fetch('/data/top-left-numbers.csv').then(r => r.text()),
+      fetch('/data/bottom-right-numbers.csv').then(r => r.text())
+    ]).then(([topLeft, bottomRight]) => {
+      setTopLeftNumbers(topLeft.trim().split('\n').map(row => row.split(',').map(Number)));
+      setBottomRightNumbers(bottomRight.trim().split('\n').map(row => row.split(',').map(Number)));
+    });
+  }, []);
 
   const handleCellClick = (row: number, col: number) => {
     if (row === 0 && col === 0 && !completed) {
@@ -26,6 +40,13 @@ const TutorialSudokuRule = ({ onNext }: TutorialSudokuRuleProps) => {
 
   const handleElementSelect = (element: string) => {
     if (selectedCell) {
+      if (element !== "grass") {
+        // Wrong answer - shake animation
+        setError(true);
+        setTimeout(() => setError(false), 500);
+        return;
+      }
+      
       const newGrid = [...gridState];
       newGrid[selectedCell.row][selectedCell.col] = element;
       setGridState(newGrid);
@@ -53,12 +74,17 @@ const TutorialSudokuRule = ({ onNext }: TutorialSudokuRuleProps) => {
         </div>
 
         <div className="flex justify-center">
-          <GameGrid
-            gridState={gridState}
-            highlightedCells={[[0, 0], [0, 1], [0, 2]]}
-            onCellClick={handleCellClick}
-            selectedCell={selectedCell}
-          />
+          <div className={error ? "animate-shake" : ""}>
+            <GameGrid
+              gridState={gridState}
+              highlightedCells={[[0, 0], [0, 1], [0, 2]]}
+              onCellClick={handleCellClick}
+              selectedCell={selectedCell}
+              showNumbers={true}
+              topLeftNumbers={topLeftNumbers}
+              bottomRightNumbers={bottomRightNumbers}
+            />
+          </div>
         </div>
 
         {!showElementButtons && !completed && (
@@ -74,6 +100,13 @@ const TutorialSudokuRule = ({ onNext }: TutorialSudokuRuleProps) => {
             <p className="text-center text-muted-foreground">
               Each row must contain all three elements. What element should go in the top-left cell?
             </p>
+            {error && (
+              <div className="text-center bg-destructive/10 p-3 rounded-lg border border-destructive/30">
+                <p className="text-sm font-medium text-destructive">
+                  Try again! Think about which element is missing from the row.
+                </p>
+              </div>
+            )}
             <div className="flex justify-center gap-4">
               <Button
                 onClick={() => handleElementSelect("grass")}

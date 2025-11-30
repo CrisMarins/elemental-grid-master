@@ -10,12 +10,12 @@ const TutorialIntro = ({ onNext }: TutorialIntroProps) => {
     <Card className="p-8 bg-card border-border">
       <div className="space-y-6 max-w-2xl mx-auto text-center">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-water via-secondary to-accent bg-clip-text text-transparent">
-          Welcome to ElementGrid
+          Welcome to SuPoke
         </h1>
         
         <div className="space-y-4 text-lg">
           <p className="text-foreground">
-            ElementGrid combines the logic of Sudoku with the strategy of type effectiveness.
+            SuPoke combines the logic of Sudoku with the strategy of type effectiveness.
           </p>
           
           <div className="bg-muted/50 p-6 rounded-lg space-y-3">
