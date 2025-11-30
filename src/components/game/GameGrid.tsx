@@ -6,6 +6,8 @@ interface GameGridProps {
   onCellClick?: (row: number, col: number) => void;
   selectedCell?: { row: number; col: number } | null;
   showNumbers?: boolean;
+  topLeftNumbers?: number[][];
+  bottomRightNumbers?: number[][];
 }
 
 const GameGrid = ({ 
@@ -13,7 +15,9 @@ const GameGrid = ({
   highlightedCells = [], 
   onCellClick,
   selectedCell,
-  showNumbers = false
+  showNumbers = false,
+  topLeftNumbers = [],
+  bottomRightNumbers = []
 }: GameGridProps) => {
   const isHighlighted = (row: number, col: number) => {
     return highlightedCells.some(([r, c]) => r === row && c === col);
@@ -34,19 +38,6 @@ const GameGrid = ({
 
     return elements[element] || null;
   };
-
-  // Example numbers for demonstration (these would come from CSV in full implementation)
-  const topLeftNumbers = [
-    [3, 1, 2],
-    [2, 3, 1],
-    [1, 2, 3],
-  ];
-  
-  const bottomRightNumbers = [
-    [2, 3, 1],
-    [1, 2, 3],
-    [3, 1, 2],
-  ];
 
   return (
     <div className="inline-block bg-grid-border p-2 rounded-lg">
@@ -71,13 +62,13 @@ const GameGrid = ({
                   cell && "cursor-default"
                 )}
               >
-                {showNumbers && (
+                {showNumbers && topLeftNumbers.length > 0 && bottomRightNumbers.length > 0 && (
                   <>
-                    <span className="absolute top-1 left-1 text-xs text-muted-foreground/20">
-                      {topLeftNumbers[rowIndex][colIndex]}
+                    <span className="absolute top-1 left-1 text-xs text-muted-foreground/30 font-mono">
+                      {topLeftNumbers[rowIndex]?.[colIndex]}
                     </span>
-                    <span className="absolute bottom-1 right-1 text-xs text-muted-foreground/20">
-                      {bottomRightNumbers[rowIndex][colIndex]}
+                    <span className="absolute bottom-1 right-1 text-xs text-muted-foreground/30 font-mono">
+                      {bottomRightNumbers[rowIndex]?.[colIndex]}
                     </span>
                   </>
                 )}

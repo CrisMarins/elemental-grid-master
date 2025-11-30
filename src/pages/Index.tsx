@@ -11,7 +11,7 @@ const Index = () => {
       <div className="max-w-4xl w-full space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-6xl font-bold bg-gradient-to-r from-water via-secondary to-accent bg-clip-text text-transparent animate-in fade-in slide-in-from-bottom-4 duration-700">
-            ElementGrid
+            SuPoke
           </h1>
           <p className="text-xl text-muted-foreground animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
             Where Sudoku meets type effectiveness
@@ -66,7 +66,7 @@ const Index = () => {
         </div>
 
         <div className="text-center text-sm text-muted-foreground animate-in fade-in duration-700 delay-300">
-          <p>Choose a mode to begin your ElementGrid journey</p>
+          <p>Choose a mode to begin your SuPoke journey</p>
         </div>
       </div>
     </div>

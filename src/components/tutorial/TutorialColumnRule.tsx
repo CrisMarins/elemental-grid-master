@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import GameGrid from "@/components/game/GameGrid";
@@ -10,15 +10,29 @@ interface TutorialColumnRuleProps {
 const TutorialColumnRule = ({ onNext }: TutorialColumnRuleProps) => {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [gridState, setGridState] = useState([
-    ["grass", "fire", "water"],
     [null, null, null],
-    [null, null, null],
+    ["fire", null, null],
+    ["water", null, null],
   ]);
   const [showElementButtons, setShowElementButtons] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [error, setError] = useState(false);
+  const [topLeftNumbers, setTopLeftNumbers] = useState<number[][]>([]);
+  const [bottomRightNumbers, setBottomRightNumbers] = useState<number[][]>([]);
+
+  useEffect(() => {
+    // Load CSV files
+    Promise.all([
+      fetch('/data/top-left-numbers.csv').then(r => r.text()),
+      fetch('/data/bottom-right-numbers.csv').then(r => r.text())
+    ]).then(([topLeft, bottomRight]) => {
+      setTopLeftNumbers(topLeft.trim().split('\n').map(row => row.split(',').map(Number)));
+      setBottomRightNumbers(bottomRight.trim().split('\n').map(row => row.split(',').map(Number)));
+    });
+  }, []);
 
   const handleCellClick = (row: number, col: number) => {
-    if (row === 1 && col === 0 && !completed) {
+    if (row === 0 && col === 0 && !completed) {
       setSelectedCell({ row, col });
       setShowElementButtons(true);
     }
@@ -26,6 +40,13 @@ const TutorialColumnRule = ({ onNext }: TutorialColumnRuleProps) => {
 
   const handleElementSelect = (element: string) => {
     if (selectedCell) {
+      if (element !== "grass") {
+        // Wrong answer - shake animation
+        setError(true);
+        setTimeout(() => setError(false), 500);
+        return;
+      }
+      
       const newGrid = [...gridState];
       newGrid[selectedCell.row][selectedCell.col] = element;
       setGridState(newGrid);
@@ -46,23 +67,28 @@ const TutorialColumnRule = ({ onNext }: TutorialColumnRuleProps) => {
             The Sudoku rule applies to <span className="font-bold">columns</span> too!
           </p>
           <p className="text-muted-foreground">
-            The left column is now highlighted. Notice Grass is already in the top cell.
+            The left column is now highlighted. Notice Fire is in the middle-left and Water is in the bottom-left.
           </p>
         </div>
 
         <div className="flex justify-center">
-          <GameGrid
-            gridState={gridState}
-            highlightedCells={[[0, 0], [1, 0], [2, 0]]}
-            onCellClick={handleCellClick}
-            selectedCell={selectedCell}
-          />
+          <div className={error ? "animate-shake" : ""}>
+            <GameGrid
+              gridState={gridState}
+              highlightedCells={[[0, 0], [1, 0], [2, 0]]}
+              onCellClick={handleCellClick}
+              selectedCell={selectedCell}
+              showNumbers={true}
+              topLeftNumbers={topLeftNumbers}
+              bottomRightNumbers={bottomRightNumbers}
+            />
+          </div>
         </div>
 
         {!showElementButtons && !completed && (
           <div className="text-center bg-water/10 p-4 rounded-lg border border-water/30">
             <p className="text-lg font-medium text-water">
-              Click on the middle-left cell to continue!
+              Click on the top-left cell to continue!
             </p>
           </div>
         )}
@@ -70,8 +96,15 @@ const TutorialColumnRule = ({ onNext }: TutorialColumnRuleProps) => {
         {showElementButtons && (
           <div className="space-y-4">
             <p className="text-center text-muted-foreground">
-              The column must contain all three elements. Grass is already placed. What comes next?
+              The column must contain all three elements. Fire and Water are already placed. What comes next?
             </p>
+            {error && (
+              <div className="text-center bg-destructive/10 p-3 rounded-lg border border-destructive/30">
+                <p className="text-sm font-medium text-destructive">
+                  Try again! Think about which element is missing from the column.
+                </p>
+              </div>
+            )}
             <div className="flex justify-center gap-4">
               <Button
                 onClick={() => handleElementSelect("grass")}
