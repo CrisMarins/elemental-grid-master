@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 import TutorialIntro from "@/components/tutorial/TutorialIntro";
 import TutorialSudokuRule from "@/components/tutorial/TutorialSudokuRule";
 import TutorialColumnRule from "@/components/tutorial/TutorialColumnRule";
+import TutorialCombinedRule from "@/components/tutorial/TutorialCombinedRule";
+import TutorialInteractionGraph from "@/components/tutorial/TutorialInteractionGraph";
+import TutorialAttackDynamic from "@/components/tutorial/TutorialAttackDynamic";
+import TutorialDefenseDynamic from "@/components/tutorial/TutorialDefenseDynamic";
 
 const Tutorial = () => {
   const navigate = useNavigate();
@@ -18,6 +22,14 @@ const Tutorial = () => {
         return <TutorialSudokuRule onNext={() => setStep(2)} />;
       case 2:
         return <TutorialColumnRule onNext={() => setStep(3)} />;
+      case 3:
+        return <TutorialCombinedRule onNext={() => setStep(4)} />;
+      case 4:
+        return <TutorialInteractionGraph onNext={() => setStep(5)} />;
+      case 5:
+        return <TutorialAttackDynamic onNext={() => setStep(6)} />;
+      case 6:
+        return <TutorialDefenseDynamic onNext={() => setStep(7)} />;
       default:
         return (
           <div className="text-center space-y-6">
