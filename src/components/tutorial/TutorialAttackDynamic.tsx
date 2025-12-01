@@ -7,6 +7,8 @@ interface TutorialAttackDynamicProps {
   onNext: () => void;
 }
 
+type Element = "grass" | "fire" | "water";
+
 const TutorialAttackDynamic = ({ onNext }: TutorialAttackDynamicProps) => {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [gridState, setGridState] = useState([
@@ -17,9 +19,33 @@ const TutorialAttackDynamic = ({ onNext }: TutorialAttackDynamicProps) => {
   const [showElementButtons, setShowElementButtons] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState(false);
-  const [selectedGraphElement, setSelectedGraphElement] = useState<string | null>(null);
+  const [selectedGraphElement, setSelectedGraphElement] = useState<Element | null>(null);
   const [topLeftNumbers] = useState([[6, 0, 0], [0, 0, 0], [0, 0, 0]]);
   const [bottomRightNumbers] = useState([[0, 0, 0], [0, 0, 0], [0, 0, 0]]);
+  const [hoveredElement, setHoveredElement] = useState<{ element: Element; side: "attack" | "defense" } | null>(null);
+
+  const damageValues: Record<Element, Record<Element, number>> = {
+    grass: { grass: 1, fire: 1, water: 4 },
+    fire: { grass: 4, fire: 1, water: 1 },
+    water: { grass: 1, fire: 4, water: 1 },
+  };
+
+  const elementInfo: Record<Element, { emoji: string; color: string; bgColor: string }> = {
+    grass: { emoji: "🌿", color: "text-secondary", bgColor: "bg-secondary/20" },
+    fire: { emoji: "🔥", color: "text-accent", bgColor: "bg-accent/20" },
+    water: { emoji: "💧", color: "text-water", bgColor: "bg-water/20" },
+  };
+
+  const isEdgeHighlighted = (from: Element, to: Element) => {
+    if (!hoveredElement && !selectedGraphElement) return true;
+    if (selectedGraphElement === from) return true;
+    if (hoveredElement && hoveredElement.side === "attack" && hoveredElement.element === from) return true;
+    if (hoveredElement && hoveredElement.side === "defense" && hoveredElement.element === to) return true;
+    return false;
+  };
+
+  const attackElements: Element[] = ["grass", "fire", "water"];
+  const defenseElements: Element[] = ["grass", "fire", "water"];
 
   const handleCellClick = (row: number, col: number) => {
     if (row === 1 && col === 1 && !completed) {
@@ -73,6 +99,7 @@ const TutorialAttackDynamic = ({ onNext }: TutorialAttackDynamicProps) => {
               showNumbers={true}
               topLeftNumbers={topLeftNumbers}
               bottomRightNumbers={bottomRightNumbers}
+              highlightedNumbers={[{ row: 0, col: 0, position: 'topLeft' }]}
             />
           </div>
 
@@ -80,40 +107,98 @@ const TutorialAttackDynamic = ({ onNext }: TutorialAttackDynamicProps) => {
           <div className="flex flex-col items-center">
             <h3 className="text-lg font-bold text-foreground mb-4">Type Effectiveness</h3>
             <div className="flex gap-8">
-              <div className="flex flex-col gap-3">
-                <span className="text-xs text-muted-foreground text-center">Attack</span>
-                <div
-                  className={`w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
-                    selectedGraphElement === "grass" ? "ring-4 ring-secondary scale-110 bg-secondary/30" : "bg-secondary/10"
-                  }`}
-                  onClick={() => setSelectedGraphElement(selectedGraphElement === "grass" ? null : "grass")}
-                >
-                  <span className="text-4xl">🌿</span>
-                </div>
+              {/* Attack Column */}
+              <div className="flex flex-col gap-4">
+                <h3 className="text-sm font-bold text-center text-muted-foreground mb-2">Attack</h3>
+                {attackElements.map((element) => (
+                  <div
+                    key={`attack-${element}`}
+                    className={`relative w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
+                      elementInfo[element].bgColor
+                    } ${
+                      hoveredElement && hoveredElement.element !== element && hoveredElement.side === "defense"
+                        ? "opacity-30"
+                        : "opacity-100"
+                    } ${
+                      selectedGraphElement === element ? "ring-4 ring-primary scale-110" : ""
+                    }`}
+                    onMouseEnter={() => setHoveredElement({ element, side: "attack" })}
+                    onMouseLeave={() => setHoveredElement(null)}
+                    onClick={() => setSelectedGraphElement(selectedGraphElement === element ? null : element)}
+                  >
+                    <span className="text-4xl">{elementInfo[element].emoji}</span>
+                  </div>
+                ))}
               </div>
-              
-              <div className="flex flex-col gap-3">
-                <span className="text-xs text-muted-foreground text-center">Defense</span>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-16 rounded-lg border bg-secondary/10 flex items-center justify-center">
-                      <span className="text-3xl">🌿</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">→ 1</span>
+
+              {/* Edges */}
+              <svg width="200" height={defenseElements.length * 120} className="relative">
+                {attackElements.map((attacker, attackIdx) =>
+                  defenseElements.map((defender, defenseIdx) => {
+                    const damage = damageValues[attacker][defender];
+                    const highlighted = isEdgeHighlighted(attacker, defender);
+                    const strokeWidth = damage === 4 ? 6 : damage === 2 ? 4 : damage === 1 ? 2 : 1;
+                    const strokeColor = highlighted
+                      ? damage === 4
+                        ? "#ef4444"
+                        : damage === 2
+                        ? "#3b82f6"
+                        : damage === 1
+                        ? "#9ca3af"
+                        : "#1f2937"
+                      : "#374151";
+
+                    const y1 = attackIdx * 120 + 48;
+                    const y2 = defenseIdx * 120 + 48;
+
+                    return (
+                      <g key={`${attacker}-${defender}`}>
+                        <line
+                          x1="10"
+                          y1={y1}
+                          x2="190"
+                          y2={y2}
+                          stroke={strokeColor}
+                          strokeWidth={strokeWidth}
+                          opacity={highlighted ? 1 : 0.2}
+                          className="transition-all"
+                        />
+                        {highlighted && (hoveredElement || selectedGraphElement) && (
+                          <text
+                            x="100"
+                            y={(y1 + y2) / 2}
+                            fill="currentColor"
+                            className="text-sm font-bold fill-foreground"
+                            textAnchor="middle"
+                          >
+                            {damage}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })
+                )}
+              </svg>
+
+              {/* Defense Column */}
+              <div className="flex flex-col gap-4">
+                <h3 className="text-sm font-bold text-center text-muted-foreground mb-2">Defense</h3>
+                {defenseElements.map((element) => (
+                  <div
+                    key={`defense-${element}`}
+                    className={`relative w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
+                      elementInfo[element].bgColor
+                    } ${
+                      hoveredElement && hoveredElement.element !== element && hoveredElement.side === "attack"
+                        ? "opacity-30"
+                        : "opacity-100"
+                    }`}
+                    onMouseEnter={() => setHoveredElement({ element, side: "defense" })}
+                    onMouseLeave={() => setHoveredElement(null)}
+                  >
+                    <span className="text-4xl">{elementInfo[element].emoji}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-16 rounded-lg border bg-accent/10 flex items-center justify-center">
-                      <span className="text-3xl">🔥</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">→ 1</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-16 rounded-lg border bg-water/10 flex items-center justify-center">
-                      <span className="text-3xl">💧</span>
-                    </div>
-                    <span className="text-sm font-bold text-accent">→ 4</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>

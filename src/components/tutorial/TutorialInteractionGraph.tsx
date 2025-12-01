@@ -12,12 +12,13 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
   const [hoveredElement, setHoveredElement] = useState<{ element: Element; side: "attack" | "defense" } | null>(null);
   const [clickedElement, setClickedElement] = useState<Element | null>(null);
   const [showSecondGraph, setShowSecondGraph] = useState(false);
+  const [showGotItButton, setShowGotItButton] = useState(false);
 
   const damageValues: Record<Element, Record<Element, number>> = {
     grass: { grass: 1, fire: 1, water: 4, electric: 0, ground: 0 },
     fire: { grass: 4, fire: 1, water: 1, electric: 0, ground: 0 },
     water: { grass: 1, fire: 4, water: 1, electric: 0, ground: 0 },
-    electric: { grass: 1, fire: 2, water: 2, electric: 0, ground: 0 },
+    electric: { grass: 1, fire: 2, water: 4, electric: 0, ground: 0 },
     ground: { grass: 0, fire: 0, water: 0, electric: 0, ground: 0 },
   };
 
@@ -31,9 +32,15 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
 
   const handleElementClick = (element: Element) => {
     setClickedElement(element);
-    if (element === "grass" || element === "fire" || element === "water") {
-      setTimeout(() => setShowSecondGraph(true), 1000);
+    if (!showSecondGraph && (element === "grass" || element === "fire" || element === "water")) {
+      setShowGotItButton(true);
     }
+  };
+
+  const handleGotIt = () => {
+    setShowSecondGraph(true);
+    setShowGotItButton(false);
+    setClickedElement(null);
   };
 
   const isEdgeHighlighted = (from: Element, to: Element) => {
@@ -74,9 +81,9 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
                 <li><span className="font-bold text-muted-foreground">Not Very Effective (1)</span> - Reduced damage</li>
                 <li><span className="font-bold text-destructive">No Effect (0)</span> - Deals no damage at all</li>
               </ul>
-              <p className="text-muted-foreground mt-2">
-                Electric deals <span className="font-bold">normal damage</span> to Fire and Water, but has <span className="font-bold">no effect</span> on Ground!
-              </p>
+               <p className="text-muted-foreground mt-2">
+                 Electric deals <span className="font-bold">normal damage</span> to Fire, <span className="font-bold">super effective</span> to Water, but has <span className="font-bold">no effect</span> on Ground!
+               </p>
             </>
           )}
         </div>
@@ -107,7 +114,7 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
           </div>
 
           {/* Edges */}
-          <svg width="200" height={defenseElements.length * 120} className="relative">
+          <svg width="200" height={Math.max(attackElements.length, defenseElements.length) * 120} className="relative">
             {attackElements.map((attacker, attackIdx) =>
               defenseElements.map((defender, defenseIdx) => {
                 const damage = damageValues[attacker][defender];
@@ -123,8 +130,10 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
                     : "#1f2937"
                   : "#374151";
 
-                const y1 = attackIdx * 120 + 48;
-                const y2 = defenseIdx * 120 + 48;
+                const attackYOffset = showSecondGraph ? 0 : 0;
+                const defenseYOffset = 0;
+                const y1 = attackIdx * 120 + 48 + attackYOffset;
+                const y2 = defenseIdx * 120 + 48 + defenseYOffset;
 
                 return (
                   <g key={`${attacker}-${defender}`}>
@@ -176,6 +185,14 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
             ))}
           </div>
         </div>
+
+        {showGotItButton && !showSecondGraph && (
+          <div className="flex justify-center">
+            <Button onClick={handleGotIt} size="lg" className="bg-primary hover:bg-primary/90">
+              Got it!
+            </Button>
+          </div>
+        )}
 
         {showSecondGraph && (
           <div className="flex justify-center">

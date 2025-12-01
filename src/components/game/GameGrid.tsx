@@ -8,6 +8,7 @@ interface GameGridProps {
   showNumbers?: boolean;
   topLeftNumbers?: number[][];
   bottomRightNumbers?: number[][];
+  highlightedNumbers?: { row: number; col: number; position: 'topLeft' | 'bottomRight' }[];
 }
 
 const GameGrid = ({ 
@@ -17,7 +18,8 @@ const GameGrid = ({
   selectedCell,
   showNumbers = false,
   topLeftNumbers = [],
-  bottomRightNumbers = []
+  bottomRightNumbers = [],
+  highlightedNumbers = []
 }: GameGridProps) => {
   const isHighlighted = (row: number, col: number) => {
     return highlightedCells.some(([r, c]) => r === row && c === col);
@@ -25,6 +27,10 @@ const GameGrid = ({
 
   const isSelected = (row: number, col: number) => {
     return selectedCell?.row === row && selectedCell?.col === col;
+  };
+
+  const isNumberHighlighted = (row: number, col: number, position: 'topLeft' | 'bottomRight') => {
+    return highlightedNumbers.some(hn => hn.row === row && hn.col === col && hn.position === position);
   };
 
   const getElementDisplay = (element: string | null) => {
@@ -64,10 +70,20 @@ const GameGrid = ({
               >
                 {showNumbers && topLeftNumbers.length > 0 && bottomRightNumbers.length > 0 && (
                   <>
-                    <span className="absolute top-1 left-1 text-xs text-muted-foreground/30 font-mono">
+                    <span className={cn(
+                      "absolute top-1 left-1 text-sm font-mono transition-all duration-300",
+                      isNumberHighlighted(rowIndex, colIndex, 'topLeft') 
+                        ? "text-accent font-bold scale-125 ring-2 ring-accent rounded px-1" 
+                        : "text-muted-foreground/60"
+                    )}>
                       {topLeftNumbers[rowIndex]?.[colIndex]}
                     </span>
-                    <span className="absolute bottom-1 right-1 text-xs text-muted-foreground/30 font-mono">
+                    <span className={cn(
+                      "absolute bottom-1 right-1 text-sm font-mono transition-all duration-300",
+                      isNumberHighlighted(rowIndex, colIndex, 'bottomRight') 
+                        ? "text-water font-bold scale-125 ring-2 ring-water rounded px-1" 
+                        : "text-muted-foreground/60"
+                    )}>
                       {bottomRightNumbers[rowIndex]?.[colIndex]}
                     </span>
                   </>
