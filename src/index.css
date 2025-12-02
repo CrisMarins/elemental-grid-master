@@ -77,3 +77,25 @@ All colors MUST be HSL.
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
+
+@keyframes wave-shine {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.completion-shine {
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: wave-shine 0.8s ease-out forwards;
+}

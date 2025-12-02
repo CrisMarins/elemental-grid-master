@@ -9,6 +9,7 @@ interface GameGridProps {
   topLeftNumbers?: number[][];
   bottomRightNumbers?: number[][];
   highlightedNumbers?: { row: number; col: number; position: 'topLeft' | 'bottomRight' }[];
+  completedCells?: boolean[][];
 }
 
 const GameGrid = ({ 
@@ -19,7 +20,8 @@ const GameGrid = ({
   showNumbers = false,
   topLeftNumbers = [],
   bottomRightNumbers = [],
-  highlightedNumbers = []
+  highlightedNumbers = [],
+  completedCells
 }: GameGridProps) => {
   const isHighlighted = (row: number, col: number) => {
     return highlightedCells.some(([r, c]) => r === row && c === col);
@@ -65,7 +67,8 @@ const GameGrid = ({
                   highlighted && "bg-grid-highlight ring-2 ring-water",
                   selected && "ring-4 ring-water scale-105",
                   !cell && "hover:bg-grid-highlight/50",
-                  cell && "cursor-default"
+                  cell && "cursor-default",
+                  completedCells?.[rowIndex]?.[colIndex] && "completion-shine"
                 )}
               >
                 {showNumbers && topLeftNumbers.length > 0 && bottomRightNumbers.length > 0 && (

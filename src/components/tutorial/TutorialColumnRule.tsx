@@ -17,18 +17,30 @@ const TutorialColumnRule = ({ onNext }: TutorialColumnRuleProps) => {
   const [showElementButtons, setShowElementButtons] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState(false);
-  const [topLeftNumbers, setTopLeftNumbers] = useState<number[][]>([]);
-  const [bottomRightNumbers, setBottomRightNumbers] = useState<number[][]>([]);
+  const [topLeftNumbers, setTopLeftNumbers] = useState<number[][]>([[0, 0, 0], [0, 0, 0], [0, 0, 0]]);
+  const [bottomRightNumbers, setBottomRightNumbers] = useState<number[][]>([[0, 0, 0], [0, 0, 0], [0, 0, 0]]);
 
   useEffect(() => {
-    // Load CSV files
-    Promise.all([
-      fetch('/data/top-left-numbers.csv').then(r => r.text()),
-      fetch('/data/bottom-right-numbers.csv').then(r => r.text())
-    ]).then(([topLeft, bottomRight]) => {
-      setTopLeftNumbers(topLeft.trim().split('\n').map(row => row.split(',').map(Number)));
-      setBottomRightNumbers(bottomRight.trim().split('\n').map(row => row.split(',').map(Number)));
-    });
+    const loadNumbers = async () => {
+      try {
+        const atkResponse = await fetch('/data/tutorial1_atk.csv');
+        const atkText = await atkResponse.text();
+        const atkRows = atkText.trim().split('\n').map(row => 
+          row.split(',').map(val => val.trim() === '' ? 0 : parseInt(val.trim()))
+        );
+        setTopLeftNumbers(atkRows);
+
+        const defResponse = await fetch('/data/tutorial1_def.csv');
+        const defText = await defResponse.text();
+        const defRows = defText.trim().split('\n').map(row => 
+          row.split(',').map(val => val.trim() === '' ? 0 : parseInt(val.trim()))
+        );
+        setBottomRightNumbers(defRows);
+      } catch (error) {
+        console.error('Error loading CSV files:', error);
+      }
+    };
+    loadNumbers();
   }, []);
 
   const handleCellClick = (row: number, col: number) => {

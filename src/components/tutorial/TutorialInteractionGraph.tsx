@@ -10,7 +10,7 @@ type Element = "grass" | "fire" | "water" | "electric" | "ground";
 
 const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => {
   const [hoveredElement, setHoveredElement] = useState<{ element: Element; side: "attack" | "defense" } | null>(null);
-  const [clickedElement, setClickedElement] = useState<Element | null>(null);
+  const [clickedElement, setClickedElement] = useState<{ element: Element; side: "attack" | "defense" } | null>(null);
   const [showSecondGraph, setShowSecondGraph] = useState(false);
   const [showGotItButton, setShowGotItButton] = useState(false);
 
@@ -30,8 +30,8 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
     ground: { emoji: "🏔️", color: "text-orange-700", bgColor: "bg-orange-700/20" },
   };
 
-  const handleElementClick = (element: Element) => {
-    setClickedElement(element);
+  const handleElementClick = (element: Element, side: "attack" | "defense") => {
+    setClickedElement({ element, side });
     if (!showSecondGraph && (element === "grass" || element === "fire" || element === "water")) {
       setShowGotItButton(true);
     }
@@ -44,7 +44,12 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
   };
 
   const isEdgeHighlighted = (from: Element, to: Element) => {
-    if (!hoveredElement) return true;
+    if (!hoveredElement && !clickedElement) return true;
+    if (clickedElement) {
+      if (clickedElement.side === "attack" && clickedElement.element === from) return true;
+      if (clickedElement.side === "defense" && clickedElement.element === to) return true;
+      return false;
+    }
     if (hoveredElement.side === "attack" && hoveredElement.element === from) return true;
     if (hoveredElement.side === "defense" && hoveredElement.element === to) return true;
     return false;
@@ -88,33 +93,48 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
           )}
         </div>
 
-        <div className="flex justify-center items-center gap-16 py-8">
+        <div className="flex justify-center items-center gap-8 py-8">
           {/* Attack Column */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xl font-bold text-center text-foreground mb-2">Attack</h3>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-lg font-bold text-center text-foreground mb-2">Attack</h3>
             {attackElements.map((element) => (
               <div
                 key={`attack-${element}`}
-                className={`relative w-24 h-24 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
+                className={`relative w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
                   elementInfo[element].bgColor
                 } ${
                   hoveredElement && hoveredElement.element !== element && hoveredElement.side === "defense"
                     ? "opacity-30"
+                    : clickedElement && clickedElement.element !== element && clickedElement.side === "defense"
+                    ? "opacity-30"
                     : "opacity-100"
                 } ${
-                  clickedElement === element ? "ring-4 ring-primary scale-110" : ""
+                  clickedElement?.element === element && clickedElement?.side === "attack" ? "ring-4 ring-primary scale-110" : ""
                 }`}
                 onMouseEnter={() => setHoveredElement({ element, side: "attack" })}
                 onMouseLeave={() => setHoveredElement(null)}
-                onClick={() => handleElementClick(element)}
+                onClick={() => handleElementClick(element, "attack")}
               >
-                <span className="text-5xl">{elementInfo[element].emoji}</span>
+                <span className="text-4xl">{elementInfo[element].emoji}</span>
               </div>
             ))}
           </div>
 
           {/* Edges */}
-          <svg width="200" height={Math.max(attackElements.length, defenseElements.length) * 120} className="relative">
+          <svg width="150" height={Math.max(attackElements.length, defenseElements.length) * 96} className="relative">
+            <defs>
+              <marker
+                id="arrowhead"
+                markerWidth="10"
+                markerHeight="10"
+                refX="9"
+                refY="3"
+                orient="auto"
+                markerUnits="strokeWidth"
+              >
+                <path d="M0,0 L0,6 L9,3 z" fill="currentColor" className="fill-foreground" />
+              </marker>
+            </defs>
             {attackElements.map((attacker, attackIdx) =>
               defenseElements.map((defender, defenseIdx) => {
                 const damage = damageValues[attacker][defender];
@@ -130,26 +150,25 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
                     : "#1f2937"
                   : "#374151";
 
-                const attackYOffset = showSecondGraph ? 0 : 0;
-                const defenseYOffset = 0;
-                const y1 = attackIdx * 120 + 48 + attackYOffset;
-                const y2 = defenseIdx * 120 + 48 + defenseYOffset;
+                const y1 = attackIdx * 96 + 40;
+                const y2 = defenseIdx * 96 + 40;
 
                 return (
                   <g key={`${attacker}-${defender}`}>
                     <line
                       x1="10"
                       y1={y1}
-                      x2="190"
+                      x2="140"
                       y2={y2}
                       stroke={strokeColor}
                       strokeWidth={strokeWidth}
                       opacity={highlighted ? 1 : 0.2}
                       className="transition-all"
+                      markerEnd={highlighted ? "url(#arrowhead)" : ""}
                     />
-                    {highlighted && hoveredElement && (
+                    {highlighted && (hoveredElement || clickedElement) && (
                       <text
-                        x="100"
+                        x="75"
                         y={(y1 + y2) / 2}
                         fill="currentColor"
                         className="text-sm font-bold fill-foreground"
@@ -165,22 +184,27 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
           </svg>
 
           {/* Defense Column */}
-          <div className="flex flex-col gap-4">
-            <h3 className="text-xl font-bold text-center text-foreground mb-2">Defense</h3>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-lg font-bold text-center text-foreground mb-2">Defense</h3>
             {defenseElements.map((element) => (
               <div
                 key={`defense-${element}`}
-                className={`relative w-24 h-24 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
+                className={`relative w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
                   elementInfo[element].bgColor
                 } ${
                   hoveredElement && hoveredElement.element !== element && hoveredElement.side === "attack"
                     ? "opacity-30"
+                    : clickedElement && clickedElement.element !== element && clickedElement.side === "attack"
+                    ? "opacity-30"
                     : "opacity-100"
+                } ${
+                  clickedElement?.element === element && clickedElement?.side === "defense" ? "ring-4 ring-primary scale-110" : ""
                 }`}
                 onMouseEnter={() => setHoveredElement({ element, side: "defense" })}
                 onMouseLeave={() => setHoveredElement(null)}
+                onClick={() => handleElementClick(element, "defense")}
               >
-                <span className="text-5xl">{elementInfo[element].emoji}</span>
+                <span className="text-4xl">{elementInfo[element].emoji}</span>
               </div>
             ))}
           </div>
