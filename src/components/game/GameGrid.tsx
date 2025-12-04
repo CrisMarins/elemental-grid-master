@@ -42,6 +42,8 @@ const GameGrid = ({
       grass: { emoji: "🌿", color: "text-secondary" },
       fire: { emoji: "🔥", color: "text-accent" },
       water: { emoji: "💧", color: "text-water" },
+      electric: { emoji: "⚡", color: "text-yellow-400" },
+      ground: { emoji: "🏔️", color: "text-orange-700" },
     };
 
     return elements[element] || null;
