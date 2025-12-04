@@ -9,6 +9,7 @@ import TutorialCombinedRule from "@/components/tutorial/TutorialCombinedRule";
 import TutorialInteractionGraph from "@/components/tutorial/TutorialInteractionGraph";
 import TutorialAttackDynamic from "@/components/tutorial/TutorialAttackDynamic";
 import TutorialDefenseDynamic from "@/components/tutorial/TutorialDefenseDynamic";
+import TutorialNewElements from "@/components/tutorial/TutorialNewElements";
 
 const Tutorial = () => {
   const navigate = useNavigate();
@@ -30,12 +31,14 @@ const Tutorial = () => {
         return <TutorialAttackDynamic onNext={() => setStep(6)} />;
       case 6:
         return <TutorialDefenseDynamic onNext={() => setStep(7)} />;
+      case 7:
+        return <TutorialNewElements onNext={() => setStep(8)} />;
       default:
         return (
           <div className="text-center space-y-6">
             <h2 className="text-3xl font-bold">Tutorial Complete!</h2>
             <p className="text-lg text-muted-foreground">
-              You've mastered the basics. Ready to play?
+              You've mastered all the mechanics. Ready to play?
             </p>
             <Button onClick={() => navigate("/")} size="lg" className="mt-4">
               Back to Menu
