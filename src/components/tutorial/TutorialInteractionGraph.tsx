@@ -15,11 +15,11 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
   const [showGotItButton, setShowGotItButton] = useState(false);
 
   const damageValues: Record<Element, Record<Element, number>> = {
-    grass: { grass: 1, fire: 1, water: 4, electric: 0, ground: 0 },
-    fire: { grass: 4, fire: 1, water: 1, electric: 0, ground: 0 },
-    water: { grass: 1, fire: 4, water: 1, electric: 0, ground: 0 },
-    electric: { grass: 1, fire: 2, water: 4, electric: 0, ground: 0 },
-    ground: { grass: 0, fire: 0, water: 0, electric: 0, ground: 0 },
+    grass: { grass: 1, fire: 1, water: 4, electric: 1, ground: 1 },
+    fire: { grass: 4, fire: 1, water: 1, electric: 1, ground: 1 },
+    water: { grass: 1, fire: 4, water: 1, electric: 1, ground: 2 },
+    electric: { grass: 1, fire: 1, water: 4, electric: 1, ground: 0 },
+    ground: { grass: 1, fire: 2, water: 1, electric: 4, ground: 1 },
   };
 
   const elementInfo: Record<Element, { emoji: string; color: string; bgColor: string }> = {
@@ -93,14 +93,14 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
           )}
         </div>
 
-        <div className="flex justify-center items-center gap-8 py-8">
+        <div className="flex justify-center items-center gap-4 py-4">
           {/* Attack Column */}
-          <div className="flex flex-col gap-3">
-            <h3 className="text-lg font-bold text-center text-foreground mb-2">Attack</h3>
+          <div className="flex flex-col gap-2">
+            <h3 className="text-sm font-bold text-center text-foreground mb-1">Attack</h3>
             {attackElements.map((element) => (
               <div
                 key={`attack-${element}`}
-                className={`relative w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
+                className={`relative w-12 h-12 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
                   elementInfo[element].bgColor
                 } ${
                   hoveredElement && hoveredElement.element !== element && hoveredElement.side === "defense"
@@ -109,37 +109,37 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
                     ? "opacity-30"
                     : "opacity-100"
                 } ${
-                  clickedElement?.element === element && clickedElement?.side === "attack" ? "ring-4 ring-primary scale-110" : ""
+                  clickedElement?.element === element && clickedElement?.side === "attack" ? "ring-2 ring-primary scale-105" : ""
                 }`}
                 onMouseEnter={() => setHoveredElement({ element, side: "attack" })}
                 onMouseLeave={() => setHoveredElement(null)}
                 onClick={() => handleElementClick(element, "attack")}
               >
-                <span className="text-4xl">{elementInfo[element].emoji}</span>
+                <span className="text-2xl">{elementInfo[element].emoji}</span>
               </div>
             ))}
           </div>
 
           {/* Edges */}
-          <svg width="150" height={Math.max(attackElements.length, defenseElements.length) * 96} className="relative">
+          <svg width="80" height={Math.max(attackElements.length, defenseElements.length) * 56} className="relative">
             <defs>
               <marker
                 id="arrowhead"
-                markerWidth="10"
-                markerHeight="10"
-                refX="9"
-                refY="3"
+                markerWidth="6"
+                markerHeight="6"
+                refX="5"
+                refY="2"
                 orient="auto"
                 markerUnits="strokeWidth"
               >
-                <path d="M0,0 L0,6 L9,3 z" fill="currentColor" className="fill-foreground" />
+                <path d="M0,0 L0,4 L6,2 z" fill="currentColor" className="fill-foreground" />
               </marker>
             </defs>
             {attackElements.map((attacker, attackIdx) =>
               defenseElements.map((defender, defenseIdx) => {
                 const damage = damageValues[attacker][defender];
                 const highlighted = isEdgeHighlighted(attacker, defender);
-                const strokeWidth = damage === 4 ? 6 : damage === 2 ? 4 : damage === 1 ? 2 : 1;
+                const strokeWidth = damage === 4 ? 4 : damage === 2 ? 3 : damage === 1 ? 1.5 : 0.5;
                 const strokeColor = highlighted
                   ? damage === 4
                     ? "#ef4444"
@@ -150,15 +150,15 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
                     : "#1f2937"
                   : "#374151";
 
-                const y1 = attackIdx * 96 + 40;
-                const y2 = defenseIdx * 96 + 40;
+                const y1 = attackIdx * 56 + 24;
+                const y2 = defenseIdx * 56 + 24;
 
                 return (
                   <g key={`${attacker}-${defender}`}>
                     <line
-                      x1="10"
+                      x1="5"
                       y1={y1}
-                      x2="140"
+                      x2="70"
                       y2={y2}
                       stroke={strokeColor}
                       strokeWidth={strokeWidth}
@@ -168,10 +168,10 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
                     />
                     {highlighted && (hoveredElement || clickedElement) && (
                       <text
-                        x="75"
+                        x="40"
                         y={(y1 + y2) / 2}
                         fill="currentColor"
-                        className="text-sm font-bold fill-foreground"
+                        className="text-xs font-bold fill-foreground"
                         textAnchor="middle"
                       >
                         {damage}
@@ -184,12 +184,12 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
           </svg>
 
           {/* Defense Column */}
-          <div className="flex flex-col gap-3">
-            <h3 className="text-lg font-bold text-center text-foreground mb-2">Defense</h3>
+          <div className="flex flex-col gap-2">
+            <h3 className="text-sm font-bold text-center text-foreground mb-1">Defense</h3>
             {defenseElements.map((element) => (
               <div
                 key={`defense-${element}`}
-                className={`relative w-20 h-20 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
+                className={`relative w-12 h-12 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all ${
                   elementInfo[element].bgColor
                 } ${
                   hoveredElement && hoveredElement.element !== element && hoveredElement.side === "attack"
@@ -198,13 +198,13 @@ const TutorialInteractionGraph = ({ onNext }: TutorialInteractionGraphProps) => 
                     ? "opacity-30"
                     : "opacity-100"
                 } ${
-                  clickedElement?.element === element && clickedElement?.side === "defense" ? "ring-4 ring-primary scale-110" : ""
+                  clickedElement?.element === element && clickedElement?.side === "defense" ? "ring-2 ring-primary scale-105" : ""
                 }`}
                 onMouseEnter={() => setHoveredElement({ element, side: "defense" })}
                 onMouseLeave={() => setHoveredElement(null)}
                 onClick={() => handleElementClick(element, "defense")}
               >
-                <span className="text-4xl">{elementInfo[element].emoji}</span>
+                <span className="text-2xl">{elementInfo[element].emoji}</span>
               </div>
             ))}
           </div>
